@@ -1,0 +1,19 @@
+{
+  "name": "rosweb",
+  "version": "0.0.0",
+  "authors": [
+    "Jake Merdich <jake@merdich.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "paper": "~0.9.22",
+    "jquery": "~2.1.4"
+  }
+}

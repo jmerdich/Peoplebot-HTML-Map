@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>PeopleBot Moving Demo</title>
+    <script type="text/javascript" src="bower_components/paper/dist/paper-full.js"></script>
+    <script type="text/javascript" src="bower_components/jquery/dist/jquery.js"></script>
+
+    <script type="text/javascript">
+        function resize_canvas() {
+            var cv = document.getElementById('botArea');
+            cv.width = window.innerWidth;
+            cv.height = window.innerHeight;
+        }
+
+        function gen_poller(url, callback, interval) {
+            interval = interval || 30 ; //default: 30ms
+            return function poll() {
+                setTimeout(function () {
+                    $.ajax({
+                        url: url, success: callback, dataType: "json", complete: poll
+                    });
+                }, interval);
+            };
+        }
+
+        function translate_posn(x, y){
+            return new Point(x+500 ,y+500);
+        }
+
+        window.addEventListener('resize', resize_canvas, false);
+        paper.install(window);
+
+
+        (gen_poller('/api/tf.json', function (res) {
+            //window.console.log(foo[0]);
+            console.log(res);
+            res= res.transforms[0].transform;
+            if (document.bot) {
+                var posn = translate_posn(res.translation.x, res.translation.y);
+                document.bot.position = posn;
+                document.bot.rotation = res.rotation.z*360 - document.bot.last_rotation;
+                document.bot.last_rotation = res.rotation.z*360;
+                view.draw();
+                console.log(document.bot);
+            }
+
+        }))();
+
+        window.onload = function() {
+            resize_canvas();
+            // Setup directly from canvas id:
+            paper.setup('botArea');
+
+            // Create a raster map using the image tag with id of the image loaded
+            document.bkgdmap = new Raster('map');
+            // Move the raster to the center of the view
+            document.bkgdmap.position = view.center;
+
+            // Map the background color to the image background.
+            var colors = document.bkgdmap.getPixel()._components.map(function (colorval) {
+                return Math.round(colorval*255)
+            });
+            document.getElementById('botArea').style.backgroundColor =
+                    ["rgb(",colors[0],",",colors[1],",",colors[2],")"].join("");
+
+
+            // Make a bot
+            document.bot = new Path.Rectangle(new Point(0,0), new Size(100,100));
+            document.bot.position = view.center;
+            document.bot.last_rotation = 0;
+            document.bot.strokeColor = 'red';
+
+
+            view.draw();
+        }
+    </script>
+    <style>
+        .loadOnly {
+            display: none;
+        }
+        html, body {
+            margin: 0;;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+        }
+    </style>
+
+</head>
+<body>
+
+<canvas id="botArea" resize>
+
+</canvas>
+<img src="/api/map.png?crop=True" id="map" class="loadOnly">
+</body>
+</html>
